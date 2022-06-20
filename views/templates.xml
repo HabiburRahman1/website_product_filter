@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="assent_front" inherit_id="website.assets_frontend">
+    <xpath expr="." position="inside">
+		<link href="/website_product_filter/static/src/css/website_product_filter.less" rel="stylesheet"/>
+</xpath>
+</template>
+    <template id="search" inherit_id="website_sale.search">
+ 			<xpath expr="//form" position="inside">
+            <t t-if="filter_values">
+                <t t-foreach="filter_values" t-as="a">
+                    <input type="hidden" name="filter" t-att-value="'%s-%s' % (a[0], a[1])" />
+                </t>
+            </t>
+           </xpath>
+    </template>
+    <template id="products_attributes" inherit_id="website_sale.products_attributes">
+ 			<xpath expr="//form" position="inside">
+            <t t-if="filter_values">
+                <t t-foreach="filter_values" t-as="a">
+                    <input type="hidden" name="filter" t-att-value="'%s-%s' % (a[0], a[1])" />
+                </t>
+            </t>
+           </xpath>
+    </template>
+    <template id="filter_values">
+        <ul class="wpf-filter" t-if="filter_data and filters">
+            <t t-foreach="filter_data" t-as="a">
+                <t t-if="a.type != 'hidden'">
+                    <li t-if="a.value_ids and a.id in filters.ids and a.id not in not_display_filters">
+                        <div class="wpf-title">
+                            <strong t-field="a.name" />
+                        </div>
+                        <t t-if="a.type == 'select'">
+                            <select class="form-control" name="filter">
+                                <option value="" />
+                                <t t-foreach="a.value_ids" t-as="v">
+									<t t-if="variant_counts and variant_counts.get(v.id)">	
+                                    <option t-att-value="'%s-%s' % (a.id,v.id)" t-att-selected="v.id in filter_set">
+											<t t-esc="v.name"/>
+                                            <t t-if="not website.disable_count_filter">
+                                                (<t t-esc="variant_counts.get(v.id)"/>)
+                                            </t>
+									</option>
+									</t>
+                                </t>
+                            </select>
+                        </t>
+                        <t t-if="a.type == 'radio'">
+                            <ul class="wpf-filter-inner">
+                                <t t-foreach="a.value_ids" t-as="v">
+									<t t-if="variant_counts and variant_counts.get(v.id)">	
+                                    <li t-att-class="'active' if v.id in filter_set else None">
+                                        <div class="wpf-row">
+                                            <label class="mt-checkbox">
+                                                <input type="checkbox" name="filter" t-att-value="'%s-%s' % (a.id,v.id)" t-att-checked="'checked' if v.id in filter_set else None" />
+                                                <span />
+                                            </label>
+                                            <span t-field="v.name" />
+                                            <t t-if="not website.disable_count_filter">
+                                                (<t t-esc="variant_counts.get(v.id)"/>)
+                                            </t>
+                                        </div>
+                                    </li>
+									</t>
+                                </t>
+                            </ul>
+                        </t>
+                        <t t-if="a.type == 'color'">
+                            <t t-foreach="a.value_ids" t-as="v">
+								<t t-if="variant_counts and variant_counts.get(v.id)">								
+                                <label t-attf-style="background-color:#{v.html_color or v.name}" t-attf-class="css_attribute_color #{'active' if v.id in filter_set else ''}">
+                                    <input type="checkbox" name="filter" t-att-value="'%s-%s' % (a.id,v.id)" t-att-checked="'checked' if v.id in filter_set else None" t-att-title="v.name" />
+                                </label>
+								<t t-if="not website.disable_count_filter">
+                                    (<t t-esc="variant_counts.get(v.id)"/>)
+                                </t>
+								</t>
+                            </t>
+                        </t>
+                    </li>
+                </t>
+            </t>            
+        </ul>
+    </template>
+	    <template id="products_filters" inherit_id="theme_stoneware.product_filter_title" active="True" customize_show="True" name="Product Filters">
+        <xpath expr="//div[@id='products_grid_before']//form[@class='js_attributes']" position="replace">
+            <h2>Product Filters</h2>
+            <t t-if="filter_data and filter_values">
+                <div class="wpf-applied">
+                    <div class="wpf-h3">Applied Filters</div>
+                    <form class="js_attributes" method="get">
+                        <input type="hidden" name="search" t-att-value="search" />
+                        <t t-foreach="filter_data" t-as="a">
+                            <div class="wpf-aply-row">
+                            <div class="wpf-title"> <t t-esc="a.name"/> :</div>
+                            <t t-foreach="a.value_ids" t-as="v">
+                                <t t-if="v.id in filter_set">
+        							<div class="wpf-row">
+                                        <label class="mt-checkbox">
+                                            <input type="checkbox" name="filter" t-att-value="'%s-%s' % (a.id,v.id)" t-att-checked="'checked' if v.id in filter_set else None" t-att-title="v.name" t-att-id="'app_%s' %(v.id)"/>
+                                            <span />
+                                        </label>
+                                        <label t-att-for="'app_%s' %(v.id)">                            
+                                            <span style="font-weight: normal" t-field="v.name" />
+                                        </label>
+        						</div>
+                                </t>
+                            </t>
+                            </div>
+                        </t>
+                    </form>
+                </div>              
+            </t>
+            <div class="wpf-groups" t-if="filters">
+            <form class="js_attributes" method="get">
+                <input type="hidden" name="search" t-att-value="search" />
+                <ul class="wpf-stacked"> 
+                    <t t-if="(not website.disable_group_filter) and filter_groups">
+                        <t t-foreach="filter_groups" t-as="group">
+                        <li><div class="wpf-head" t-esc="group.name"/>
+                        <t t-set="filter_data" t-value="group.filter_ids"/>
+                        <t t-call="website_product_filter.filter_values"/>
+                        </li>
+                        </t>
+                    </t>
+                    <t t-if="website.disable_group_filter">
+                        <t t-set="filter_data" t-value="filters"/>
+                        <t t-call="website_product_filter.filter_values"/>
+                    </t>
+                </ul>
+            </form>
+            </div>
+        </xpath>
+        <xpath expr="//div[@id='products_grid_before']" position="attributes">
+            <attribute name="class">col-md-3 hidden-xs</attribute>
+        </xpath>
+        <xpath expr="//div[@id='products_grid']" position="attributes">
+            <attribute name="class">col-md-9</attribute>
+        </xpath>
+    </template>
+</odoo>
